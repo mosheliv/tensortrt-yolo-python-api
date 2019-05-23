@@ -7,6 +7,7 @@ Inference time with yolov2-tiny is 85ms/image (including resizing and NMS and de
 
 ## Installing
 
+1. sudo apt-get install libgflags-dev
 1. git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps
 1. cd deepstream_reference_apps/yolo/apps/trt-yolo
 1. mkdir build && cd build
@@ -21,4 +22,5 @@ Inference time with yolov2-tiny is 85ms/image (including resizing and NMS and de
 1. git clone XXXXXXX
 1. cd XXXXXX
 1. source link_shared.sh
-1. python t.py --flagfile=../../../../config/yolov2-tiny.txt 
+1. edit ../../../../config/yolov2-tiny.txt and change all the links to absolute paths (config_file_path, wts_file_path, labels_file_path)
+1. python t.py --flagfile=../../../../config/yolov2-tiny.txt your_image.jpg

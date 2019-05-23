@@ -14,8 +14,9 @@ char stat_s[] = "this is a string";
 
 
 
-extern "C" void* yolo2_init(int argc, char* argv[])
+extern "C" void* yolo2_tiny_init(int argc, char* argv[])
 {
+    std::cout << "in init";
     // Flag set in the command line overrides the value in the flagfile
     gflags::SetUsageMessage(
         "Usage : trt-yolo-app --flagfile=</path/to/config_file.txt> --<flag>=value ...");
@@ -31,34 +32,37 @@ extern "C" void* yolo2_init(int argc, char* argv[])
     return (void*) inferNet;
 }
 
-extern "C" void* yolo3_init(int argc, char* argv[])
-{
-    // Flag set in the command line overrides the value in the flagfile
-    gflags::SetUsageMessage(
-        "Usage : trt-yolo-app --flagfile=</path/to/config_file.txt> --<flag>=value ...");
-
-    // parse config params
-    yoloConfigParserInit(argc, argv);
-    NetworkInfo yoloInfo = getYoloNetworkInfo();
-    InferParams yoloInferParams = getYoloInferParams();
-    uint64_t seed = getSeed();
-    std::string networkType = getNetworkType();
-    std::string precision = getPrecision();
-    Yolo* inferNet = new YoloV3(1, yoloInfo, yoloInferParams);
-    return (void*) inferNet;
-}
-
-extern "C" int yolo_inference(Yolo* engine, unsigned int rows, unsigned int cols, unsigned char* image, char* result_buf, unsigned int max_len)
+extern "C" int yolo_inference(void* engine, unsigned int rows, unsigned int cols, unsigned char* image)
 //extern "C" int yolo_inference(int t)
 {
+        struct timeval inferStart, inferEnd;
+	double inferElapsed = 0;
+	unsigned long ts;
+	unsigned long ots;
+	gettimeofday(&inferStart, NULL);
+
+	ots = inferStart.tv_sec+inferStart.tv_usec;
+	std::cout << "in inference" << "\n";
 	cv::Mat img(rows, cols, CV_8UC3, (void *) image);
 	cv::Mat blob;
 	std::vector<cv::Mat> letterboxStack(1);
 
+	std::cout << "engine ptr is " << (long) engine << "\n";
+	std::cout << "rows is " << rows << "\n";
+	std::cout << "cols is " << cols << "\n";
+
+	gettimeofday(&inferStart, NULL);
+	ts = inferStart.tv_sec+inferStart.tv_usec;
+	std::cout << "#1 " << ts-ots <<"\n";
+	ots = ts;
+
         float dim = std::max(rows, cols);
         int resizeH = ((rows / dim) * 416);
+	std::cout << "resizeH is " << resizeH << "\n";
         int resizeW = ((cols / dim) * 416);
+	std::cout << "resizeW is " << resizeW << "\n";
         float ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(rows);
+	std::cout << "scaling factor  is " << ScalingFactor << "\n";
         
 
         // Additional checks for images with non even dims
@@ -67,6 +71,8 @@ extern "C" int yolo_inference(Yolo* engine, unsigned int rows, unsigned int cols
 
         int m_XOffset = (416 - resizeW) / 2;
         int m_YOffset = (416 - resizeH) / 2;
+	std::cout << "m_XOffset is " << m_XOffset << "\n";
+	std::cout << "m_YOffset is " << m_YOffset << "\n";
 
         // resizing
         cv::resize(img, img, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_CUBIC);
@@ -83,33 +89,38 @@ extern "C" int yolo_inference(Yolo* engine, unsigned int rows, unsigned int cols
 	letterboxStack[0] = img;
 	blob = cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(416, 416),
                                    cv::Scalar(0.0, 0.0, 0.0), false, false);
+	gettimeofday(&inferStart, NULL);
+	ts = inferStart.tv_sec+inferStart.tv_usec;
+	std::cout << "#2 " << ts-ots <<"\n";
+	ots = ts;
         Yolo* inferNet = engine;
 
+        gettimeofday(&inferStart, NULL);
         inferNet->doInference(blob.data, 1);
-
+        gettimeofday(&inferEnd, NULL);
+        inferElapsed += ((inferEnd.tv_sec - inferStart.tv_sec)
+                         + (inferEnd.tv_usec - inferStart.tv_usec) / 1000000.0)
+            * 1000;
+	std::cout << "infer time in cpp " << inferElapsed;
+	gettimeofday(&inferStart, NULL);
+	ts = inferStart.tv_sec+inferStart.tv_usec;
+	std::cout << "#3 " << ts-ots <<"\n";
+	ots = ts;
         auto binfo = inferNet->decodeDetections(0, rows, cols);
+	std::cout << "after decode" << "\n";
+	std::cout << "nms th " << inferNet->getNMSThresh() << "\n";
+	std::cout << "num classes " << inferNet->getNumClasses() << "\n";
         auto remaining
                     = nmsAllClasses(inferNet->getNMSThresh(), binfo, inferNet->getNumClasses());
-	int res_ptr = 0;
-
-	char tmp_res[1000];
-
         for (auto b : remaining)
         {
-		char *cn = &inferNet->getClassName(b.label)[0];
-		sprintf(&tmp_res[0], "%s,%d,%f,%d,%d,%d,%d|",
-			cn,
-			b.label,
-			b.prob,
-			(int)b.box.x1,
-			(int)b.box.y1,
-			(int)b.box.x2,
-			(int)b.box.y2
-		);
-		strcpy(&result_buf[res_ptr], tmp_res);
-		res_ptr += strlen(tmp_res);
-
+		    std::cout << "in loop" << "\n";
+                    printPredictions(b, inferNet->getClassName(b.label));
         }
+	gettimeofday(&inferStart, NULL);
+	ts = inferStart.tv_sec+inferStart.tv_usec;
+	std::cout << "#4 " << ts-ots <<"\n";
+	ots = ts;
 	return 1;
 }
 
