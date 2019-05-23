@@ -1,4 +1,4 @@
-# Tensort api for the deepstream yolo implemetation
+# TensorRT api for the deepstream yolo implemetation
 
 This is a work in progress, but it works for me... It is rough around the corners and lots of place for improvment - feel free to contribute:
 
