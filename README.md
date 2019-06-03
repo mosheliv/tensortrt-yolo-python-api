@@ -13,7 +13,7 @@ Inference time with yolov2-tiny is 85ms/image (including resizing and NMS and de
 1. cd $YOLO_ROOT/apps/trt-yolo 
 1. edit CMakeLists.txt and :
 	1. change 'set(CMAKE_CXX_FLAGS_RELEASE "-O2")' to 'set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fPIC")'
-	2. add after it a line 'set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -fPIC" )'
+	2. add after it a line 'set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options -fPIC" )'
 1. mkdir build && cd build
 1. cmake -D CMAKE_BUILD_TYPE=Release ..
 as its read only. You can also chmod +w it
