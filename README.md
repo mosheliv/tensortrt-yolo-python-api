@@ -18,6 +18,7 @@ Inference time with yolov2-tiny is 85ms/image (including resizing and NMS and de
 1. cmake -D CMAKE_BUILD_TYPE=Release ..
 as its read only. You can also chmod +w it
 1. make && sudo make install
+1. edit $YOLO-ROOT/config/yolov2-tiny.txt and change all the links to absolute paths (config_file_path, wts_file_path, labels_file_path)
 1. check that the cpp app works ok by doing:
 	1. cd $YOLO_ROOT/apps/trt-yolo/build
 	1. put an image or two in $YOLO_ROOT/data/test_images.txt
@@ -26,5 +27,4 @@ as its read only. You can also chmod +w it
 1. git clone https://github.com/mosheliv/tensortrt-yolo-python-api
 1. cd tensortrt-yolo-python-api
 1. source link_shared.sh
-1. edit $YOLO-ROOT/config/yolov2-tiny.txt and change all the links to absolute paths (config_file_path, wts_file_path, labels_file_path)
 1. python t.py --flagfile=$YOLO_ROOT/config/yolov2-tiny.txt your_image.jpg
