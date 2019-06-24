@@ -9,7 +9,7 @@ Inference time with yolov2-tiny is 85ms/image (including resizing and NMS and de
 
 1. sudo apt-get install libgflags-dev cmake
 1. git clone https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps
-1. export YOLO_ROOT=`pwd`/deepstream_reference_apps/yolo
+1. export YOLO_ROOT=\`pwd\`/deepstream_reference_apps/yolo
 1. cd $YOLO_ROOT/apps/trt-yolo 
 1. edit CMakeLists.txt and :
 	1. change 'set(CMAKE_CXX_FLAGS_RELEASE "-O2")' to 'set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fPIC")'
